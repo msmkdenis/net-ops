@@ -1,0 +1,31 @@
+- name: "Docker installation"
+  hosts: directus
+  become: true
+  roles:
+    - docker_install
+
+- name: "PostgreSQL installation"
+  hosts: node1-postgresql
+  become: true
+  roles:
+    - postgresql_install
+
+- name: "Directus database setup"
+  hosts: node1-postgresql
+  become: true
+  pre_tasks:
+    - name: Set directus_ip fact
+      ansible.builtin.set_fact:
+        directus_ip: "{{ hostvars['directus']['internal_host'] }}"
+  roles:
+    - directus_database_setup
+
+- name: "Directus docker container setup"
+  hosts: directus
+  become: true
+  pre_tasks:
+    - name: Directus db host
+      ansible.builtin.set_fact:
+        db_host: "{{ hostvars['node1-postgresql']['internal_host'] }}"
+  roles:
+    - directus_install

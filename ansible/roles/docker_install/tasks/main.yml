@@ -1,0 +1,73 @@
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install required packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  loop:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - python3-pip
+    - software-properties-common
+    - acl
+  register: result
+  until: result is succeeded
+  retries: 5  # 5 попыток
+  delay: 10   # Интервал 10 секунд
+
+- name: Add Docker GPG key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable
+    state: present
+  register: result
+  until: result is succeeded
+  retries: 5  # 5 попыток
+  delay: 10   # Интервал 10 секунд
+
+- name: Install Docker, Docker-compose, containerd.io
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  loop:
+    - docker-ce
+    - docker-compose
+    - containerd.io
+  register: result
+  until: result is succeeded
+  retries: 5  # 5 попыток
+  delay: 10   # Интервал 10 секунд
+
+- name: Add current user to docker group
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: true
+
+- name: Verify Docker installation
+  ansible.builtin.command: docker --version
+  register: docker_version
+  changed_when: false
+
+- name: Print docker version
+  ansible.builtin.debug:
+    msg: "{{ docker_version.stdout }}"
+
+- name: Verify Docker Compose installation
+  ansible.builtin.command: docker compose version
+  register: compose_version
+  changed_when: false
+
+- name: Print docker compose version
+  ansible.builtin.debug:
+    msg: "{{ compose_version.stdout }}"
