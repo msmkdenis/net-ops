@@ -1,0 +1,16 @@
+---
+# Suricata Configuration
+suricata_ips_interface: "eth0"
+suricata_ips_nfqueue_num: 1
+suricata_ips_bypass_mark: 2
+
+# Docker integration  
+suricata_ips_docker_network: "172.17.0.0/16"
+
+# Rules
+suricata_ips_custom_rules:
+  - 'drop icmp any any -> any any (msg:"[IPS] BLOCK ICMP"; sid:1000007; rev:1;)'
+  - 'alert http any any -> any any (msg:"[IDS] HTTP Request Detected"; sid:100002; rev:1; flow:to_server; classtype:policy-violation;)'
+
+# System
+suricata_ips_worker_threads: 4

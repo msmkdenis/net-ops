@@ -1,31 +1,15 @@
 - name: "Docker installation"
-  hosts: directus
+  hosts: net_ops
   become: true
   roles:
     - docker_install
 
-- name: "PostgreSQL installation"
-  hosts: node1-postgresql
+- name: Deploy Suricata as IPS for Docker environment
+  hosts: net_ops
   become: true
-  roles:
-    - postgresql_install
+  gather_facts: true
+  serial: 1  # Развертываем по одному серверу
 
-- name: "Directus database setup"
-  hosts: node1-postgresql
-  become: true
-  pre_tasks:
-    - name: Set directus_ip fact
-      ansible.builtin.set_fact:
-        directus_ip: "{{ hostvars['directus']['internal_host'] }}"
   roles:
-    - directus_database_setup
-
-- name: "Directus docker container setup"
-  hosts: directus
-  become: true
-  pre_tasks:
-    - name: Directus db host
-      ansible.builtin.set_fact:
-        db_host: "{{ hostvars['node1-postgresql']['internal_host'] }}"
-  roles:
-    - directus_install
+    - role: suricata_ips
+      tags: [suricata, ips, docker]

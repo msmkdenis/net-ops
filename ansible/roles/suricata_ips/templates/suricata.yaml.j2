@@ -1,0 +1,72 @@
+%YAML 1.1
+---
+# Ansible managed - do not edit manually
+
+# Run mode
+runmodes:
+  - runmode: workers
+
+# NFQUEUE for IPS (Suricata запускается через systemd override: -q {{ suricata_ips_nfqueue_num }})
+nfqueue:
+  mode: drop
+  repeat-mark: 1
+  repeat-mask: 2
+  bypass-mark: {{ suricata_ips_bypass_mark }}
+  queue-balance:
+    - 0-1
+
+# Threading
+max-pending-packets: 1024
+detect-thread-ratio: 1.0
+
+#af-packet:
+#  - interface: enp0s3    # ← здесь имя интерфейса из ip a
+#    threads: 1
+
+# Rules
+rule-files:
+  - /etc/suricata/rules/local.rules
+
+# Logging
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: /var/log/suricata/eve.json
+      types:
+        - alert
+        - http
+        - dns
+        - tls
+      community-id: true
+
+  - file:
+      enabled: yes
+      level: info
+      filename: /var/log/suricata/suricata.log
+
+# App layer protocols
+app-layer:
+  protocols:
+    tls:
+      enabled: yes
+      detection-ports:
+        dp: 443
+    http:
+      enabled: yes
+      detection-ports:
+        dp: 80, 8080, 8000
+    dns:
+      enabled: yes
+      detection-ports:
+        dp: 53
+
+# Set the default logging path
+logging:
+  default-log-format: "[%i] %t - (%f:%l) <%d> (%n) -- "
+  default-output:
+    enabled: yes
+    file:
+      enabled: yes
+      filename: /var/log/suricata/suricata.log
+      level: info

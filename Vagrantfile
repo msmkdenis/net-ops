@@ -2,7 +2,7 @@ VMS = [
     {
         name: "net_ops",
         box: "ubuntu/jammy64",
-        public_ip: "192.168.56.10",
+        #public_ip: "192.168.56.10",
         private_ip: "192.168.56.10",
         ssh_port: 2201,
         memory: 1024,
@@ -21,7 +21,7 @@ Vagrant.configure("2") do |config|
 
             # Сетевые настройки
             v.vm.network "private_network", ip: vm[:private_ip]
-            v.vm.network "public_network", bridge: "enp0s31f6", ip: vm[:public_ip]
+            #v.vm.network "public_network", bridge: "enp0s31f6", ip: vm[:public_ip]
 
             # Проброс портов
             vm[:forwarded_ports].each do |fp|

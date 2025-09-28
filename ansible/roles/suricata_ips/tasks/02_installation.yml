@@ -1,0 +1,26 @@
+---
+- name: Add Suricata PPA
+  ansible.builtin.apt_repository:
+    repo: ppa:oisf/suricata-stable
+    state: present
+
+- name: Install Suricata from Ubuntu repositories
+  ansible.builtin.apt:
+    name:
+      - suricata
+    state: present
+    update_cache: true
+  tags: [installation]
+
+- name: Disable Suricata service on first install
+  ansible.builtin.systemd:
+    name: suricata
+    enabled: false
+    state: stopped
+  tags: [installation]
+
+- name: Check Suricata version
+  ansible.builtin.command: suricata --build-info
+  register: suricata_ips_version
+  changed_when: false
+  tags: [installation]

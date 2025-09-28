@@ -7,7 +7,6 @@
   ansible.builtin.apt:
     name: "{{ item }}"
     state: present
-    update_cache: true
   loop:
     - apt-transport-https
     - ca-certificates
@@ -15,10 +14,10 @@
     - python3-pip
     - software-properties-common
     - acl
-  register: result
-  until: result is succeeded
-  retries: 5  # 5 попыток
-  delay: 10   # Интервал 10 секунд
+  register: docker_install_result
+  until: docker_install_result is succeeded
+  retries: 5
+  delay: 10
 
 - name: Add Docker GPG key
   ansible.builtin.apt_key:
@@ -29,24 +28,21 @@
   ansible.builtin.apt_repository:
     repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable
     state: present
-  register: result
-  until: result is succeeded
-  retries: 5  # 5 попыток
-  delay: 10   # Интервал 10 секунд
 
-- name: Install Docker, Docker-compose, containerd.io
+- name: Install Docker packages
   ansible.builtin.apt:
-    name: "{{ item }}"
+    name:
+      - docker-ce
+      - docker-compose
+      - containerd.io
     state: present
-    update_cache: true
-  loop:
-    - docker-ce
-    - docker-compose
-    - containerd.io
-  register: result
-  until: result is succeeded
-  retries: 5  # 5 попыток
-  delay: 10   # Интервал 10 секунд
+    update_cache: true  # ← ОБНОВЛЯЕМ КЕШ ЗДЕСЬ
+
+- name: Ensure Docker service is running
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
 
 - name: Add current user to docker group
   ansible.builtin.user:
@@ -56,18 +52,9 @@
 
 - name: Verify Docker installation
   ansible.builtin.command: docker --version
-  register: docker_version
+  register: docker_install_docker_version
   changed_when: false
 
 - name: Print docker version
   ansible.builtin.debug:
-    msg: "{{ docker_version.stdout }}"
-
-- name: Verify Docker Compose installation
-  ansible.builtin.command: docker compose version
-  register: compose_version
-  changed_when: false
-
-- name: Print docker compose version
-  ansible.builtin.debug:
-    msg: "{{ compose_version.stdout }}"
+    msg: "{{ docker_install_docker_version.stdout }}"
