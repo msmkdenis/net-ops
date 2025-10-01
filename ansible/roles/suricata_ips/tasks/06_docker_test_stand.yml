@@ -1,0 +1,58 @@
+# 06_docker_test_stand.yml
+---
+- name: Set test stand variables with role prefix
+  ansible.builtin.set_fact:
+    suricata_ips_docker_network_name: "suricata_test_net"
+    suricata_ips_attacker_name: "attacker"
+    suricata_ips_victim_name: "victim"
+  tags: [docker_stand]
+
+- name: Create a dedicated Docker network
+  community.docker.docker_network:
+    name: "{{ suricata_ips_docker_network_name }}"
+    state: present
+  tags: [docker_stand]
+
+- name: Launch victim container with Nginx web server
+  community.docker.docker_container:
+    name: "{{ suricata_ips_victim_name }}"
+    image: nginx:alpine  # Используем облегченный образ Nginx
+    state: started
+    recreate: true
+    networks:
+      - name: "{{ suricata_ips_docker_network_name }}"
+    volumes:
+      # Монтируем ваш index.html в стандартное место Nginx
+      - "{{ role_path }}/files/:/usr/share/nginx/html/:ro"
+    # Nginx работает в режиме foreground по умолчанию, поэтому command не нужна
+    detach: true
+  tags: [docker_stand]
+
+- name: Launch attacker container
+  community.docker.docker_container:
+    name: "{{ suricata_ips_attacker_name }}"
+    image: kalilinux/kali-rolling:latest
+    state: started
+    recreate: true
+    networks:
+      - name: "{{ suricata_ips_docker_network_name }}"
+    command: "sleep infinity"
+    tty: true
+    detach: true
+  tags: [docker_stand]
+
+- name: Install testing tools (curl, ping) in attacker container
+  community.docker.docker_container_exec:
+    container: "{{ suricata_ips_attacker_name }}"
+    command: "bash -c 'apt update && apt install -y curl iputils-ping'"
+  tags: [docker_stand]
+
+- name: Display instructions for testing
+  ansible.builtin.debug:
+    msg:
+      - "✅ Тестовый стенд развернут. Выполните шаги для проверки:"
+      - "1. Подключитесь к атакующему: docker exec -it {{ suricata_ips_attacker_name }} bash"
+      - "2. Проверьте ping: ping -c 3 {{ suricata_ips_victim_name }} (должен быть заблокирован)"
+      - "3. Проверьте curl: curl http://{{ suricata_ips_victim_name }} (должен пройти)"
+      - "4. Наблюдайте за логами хоста: sudo tail -f /var/log/suricata/eve.json | jq '.'"
+  tags: [docker_stand]

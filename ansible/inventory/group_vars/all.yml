@@ -1,9 +1,4 @@
 ---
-# Suricata Configuration
-suricata_ips_interface: "eth0"
-suricata_ips_nfqueue_num: 1
-suricata_ips_bypass_mark: 2
-
 # Docker integration  
 suricata_ips_docker_network: "172.17.0.0/16"
 

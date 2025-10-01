@@ -14,7 +14,7 @@
     content: |
       [Service]
       ExecStart=
-      ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml -q {{ suricata_ips_nfqueue_num }} --pidfile /run/suricata.pid
+      ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml -q 1 --pidfile /run/suricata.pid
     owner: root
     group: root
     mode: '0644'

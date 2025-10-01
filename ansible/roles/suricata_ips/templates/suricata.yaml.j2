@@ -6,14 +6,15 @@
 runmodes:
   - runmode: workers
 
-# NFQUEUE for IPS (Suricata запускается через systemd override: -q {{ suricata_ips_nfqueue_num }})
+# NFQUEUE for IPS
 nfqueue:
-  mode: drop
+  mode: accept
   repeat-mark: 1
-  repeat-mask: 2
-  bypass-mark: {{ suricata_ips_bypass_mark }}
+  repeat-mask: 1
+  bypass-mark: 2
+  bypass-mask: 2
   queue-balance:
-    - 0-1
+  - 0-3
 
 # Threading
 max-pending-packets: 1024
