@@ -16,15 +16,13 @@
 - name: Launch victim container with Nginx web server
   community.docker.docker_container:
     name: "{{ suricata_ips_victim_name }}"
-    image: nginx:alpine  # Используем облегченный образ Nginx
+    image: nginx:alpine
     state: started
     recreate: true
     networks:
       - name: "{{ suricata_ips_docker_network_name }}"
     volumes:
-      # Монтируем ваш index.html в стандартное место Nginx
       - "{{ role_path }}/files/:/usr/share/nginx/html/:ro"
-    # Nginx работает в режиме foreground по умолчанию, поэтому command не нужна
     detach: true
   tags: [docker_stand]
 
@@ -54,5 +52,6 @@
       - "1. Подключитесь к атакующему: docker exec -it {{ suricata_ips_attacker_name }} bash"
       - "2. Проверьте ping: ping -c 3 {{ suricata_ips_victim_name }} (должен быть заблокирован)"
       - "3. Проверьте curl: curl http://{{ suricata_ips_victim_name }} (должен пройти)"
-      - "4. Наблюдайте за логами хоста: sudo tail -f /var/log/suricata/eve.json | jq '.'"
+      - "4. Удалим предыдущие логи: sudo truncate -s 0 /var/log/suricata/eve.json"
+      - "5. Наблюдайте за логами хоста: sudo tail -f /var/log/suricata/eve.json | jq '.'"
   tags: [docker_stand]
