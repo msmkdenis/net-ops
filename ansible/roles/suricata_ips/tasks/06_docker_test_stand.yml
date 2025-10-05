@@ -1,4 +1,3 @@
-# 06_docker_test_stand.yml
 ---
 - name: Set test stand variables with role prefix
   ansible.builtin.set_fact:
@@ -13,6 +12,32 @@
     state: present
   tags: [docker_stand]
 
+- name: Ensure html folder exists for nginx
+  ansible.builtin.file:
+    path: "{{ role_path }}/files"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags: [docker_stand]
+
+- name: Deploy index.html for victim nginx
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: "{{ role_path }}/files/index.html"
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  tags: [docker_stand]
+
+- name: Ensure correct permissions for Nginx content
+  ansible.builtin.file:
+    path: "{{ role_path }}/files/"
+    mode: "u=rwX,g=rX,o=rX"
+    recurse: true
+  tags: [docker_stand]
+
 - name: Launch victim container with Nginx web server
   community.docker.docker_container:
     name: "{{ suricata_ips_victim_name }}"
@@ -22,7 +47,7 @@
     networks:
       - name: "{{ suricata_ips_docker_network_name }}"
     volumes:
-      - "{{ role_path }}/files/:/usr/share/nginx/html/:ro"
+      - "{{ role_path }}/files:/usr/share/nginx/html:ro"
     detach: true
   tags: [docker_stand]
 
@@ -49,9 +74,9 @@
   ansible.builtin.debug:
     msg:
       - "✅ Тестовый стенд развернут. Выполните шаги для проверки:"
-      - "1. Подключитесь к атакующему: docker exec -it {{ suricata_ips_attacker_name }} bash"
-      - "2. Проверьте ping: ping -c 3 {{ suricata_ips_victim_name }} (должен быть заблокирован)"
-      - "3. Проверьте curl: curl http://{{ suricata_ips_victim_name }} (должен пройти)"
-      - "4. Удалим предыдущие логи: sudo truncate -s 0 /var/log/suricata/eve.json"
-      - "5. Наблюдайте за логами хоста: sudo tail -f /var/log/suricata/eve.json | jq '.'"
+      - "2. Удалим предыдущие логи: sudo truncate -s 0 /var/log/suricata/eve.json"
+      - "3. Наблюдаем за логами хоста: sudo tail -f /var/log/suricata/eve.json | jq '.'"
+      - "4. Подключимся к атакующему: docker exec -it {{ suricata_ips_attacker_name }} bash"
+      - "5. Проверим ping: ping -c 3 {{ suricata_ips_victim_name }} (должен быть заблокирован)"
+      - "6. Проверим curl: curl http://{{ suricata_ips_victim_name }} (должен пройти)"
   tags: [docker_stand]
