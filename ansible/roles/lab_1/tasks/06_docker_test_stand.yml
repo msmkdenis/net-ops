@@ -1,14 +1,14 @@
 ---
 - name: Set test stand variables with role prefix
   ansible.builtin.set_fact:
-    suricata_ips_docker_network_name: "suricata_test_net"
-    suricata_ips_attacker_name: "attacker"
-    suricata_ips_victim_name: "victim"
+    lab_1_suricata_ips_docker_network_name: "suricata_test_net"
+    lab_1_suricata_ips_attacker_name: "attacker"
+    lab_1_suricata_ips_victim_name: "victim"
   tags: [docker_stand]
 
 - name: Create a dedicated Docker network
   community.docker.docker_network:
-    name: "{{ suricata_ips_docker_network_name }}"
+    name: "{{ lab_1_suricata_ips_docker_network_name }}"
     state: present
   tags: [docker_stand]
 
@@ -40,34 +40,45 @@
 
 - name: Launch victim container with Nginx web server
   community.docker.docker_container:
-    name: "{{ suricata_ips_victim_name }}"
+    name: "{{ lab_1_suricata_ips_victim_name }}"
     image: nginx:alpine
     state: started
     recreate: true
     networks:
-      - name: "{{ suricata_ips_docker_network_name }}"
+      - name: "{{ lab_1_suricata_ips_docker_network_name }}"
     volumes:
       - "{{ role_path }}/files:/usr/share/nginx/html:ro"
     detach: true
   tags: [docker_stand]
 
+- name: Create Attacker Dockerfile from Jinja template on remote host
+  ansible.builtin.template:
+    src: Dockerfile.attacker.j2
+    dest: /tmp/Dockerfile.attacker
+    mode: '0644'
+  tags: [docker_stand]
+
+- name: Build attacker image (restored 'name' for compatibility)
+  community.docker.docker_image:
+    name: attacker-kali:latest
+    source: build
+    force_source: true
+    state: present
+    build:
+      path: /tmp/
+      dockerfile: Dockerfile.attacker
+  tags: [docker_stand]
+
 - name: Launch attacker container
   community.docker.docker_container:
-    name: "{{ suricata_ips_attacker_name }}"
-    image: kalilinux/kali-rolling:latest
+    name: "{{ lab_1_suricata_ips_attacker_name }}"
+    image: attacker-kali:latest
     state: started
     recreate: true
     networks:
-      - name: "{{ suricata_ips_docker_network_name }}"
-    command: "sleep infinity"
+      - name: "{{ lab_1_suricata_ips_docker_network_name }}"
     tty: true
     detach: true
-  tags: [docker_stand]
-
-- name: Install testing tools (curl, ping) in attacker container
-  community.docker.docker_container_exec:
-    container: "{{ suricata_ips_attacker_name }}"
-    command: "bash -c 'apt update && apt install -y curl iputils-ping'"
   tags: [docker_stand]
 
 - name: Display instructions for testing
@@ -76,7 +87,7 @@
       - "✅ Тестовый стенд развернут. Выполните шаги для проверки:"
       - "2. Удалим предыдущие логи: sudo truncate -s 0 /var/log/suricata/eve.json"
       - "3. Наблюдаем за логами хоста: sudo tail -f /var/log/suricata/eve.json | jq '.'"
-      - "4. Подключимся к атакующему: docker exec -it {{ suricata_ips_attacker_name }} bash"
-      - "5. Проверим ping: ping -c 3 {{ suricata_ips_victim_name }} (должен быть заблокирован)"
-      - "6. Проверим curl: curl http://{{ suricata_ips_victim_name }} (должен пройти)"
+      - "4. Подключимся к атакующему: docker exec -it attacker bash"
+      - "5. Проверим ping: ping -c 3 victim (должен быть заблокирован)"
+      - "6. Проверим curl: curl http://victim (должен пройти)"
   tags: [docker_stand]

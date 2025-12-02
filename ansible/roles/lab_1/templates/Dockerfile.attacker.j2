@@ -1,0 +1,11 @@
+FROM kalilinux/kali-rolling:latest
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    iputils-ping \
+    nmap \
+    net-tools \
+    dnsutils \
+    && rm -rf /var/lib/apt/lists/*
+
+ENTRYPOINT ["sleep", "infinity"]

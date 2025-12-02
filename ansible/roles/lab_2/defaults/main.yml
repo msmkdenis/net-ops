@@ -1,0 +1,19 @@
+# В defaults/main.yml
+lab_2_suricata_ips_nmap_rules:
+  # 1. SYN Scan — блокировка
+  - >-
+    drop tcp $EXTERNAL_NET any -> $HOME_NET any (flags:S,CE; flow:to_server,no_stream;
+    msg:"[IPS] NMAP SYN Scan Blocked"; threshold:type both, track by_src, count 10,
+    seconds 6; sid:1001001; rev:1;)
+
+  # 2. XMAS Scan — детект
+  - >-
+    alert tcp $EXTERNAL_NET any -> $HOME_NET any (flags:FPU; flow:to_server,no_stream;
+    msg:"[IDS] NMAP XMAS Scan Detected"; threshold:type both, track by_src, count 5,
+    seconds 6; sid:1001002; rev:1;)
+
+  # 3. UDP Scan — блокировка
+  - >-
+    drop udp $EXTERNAL_NET any -> $HOME_NET any (dsize:0;
+    msg:"[IPS] NMAP UDP Scan Blocked"; threshold:type both, track by_src, count 10,
+    seconds 10; sid:1001003; rev:1;)

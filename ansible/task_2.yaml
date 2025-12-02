@@ -1,0 +1,7 @@
+- name: Lab_2
+  hosts: net_ops
+  become: true
+  gather_facts: true
+  roles:
+    - role: lab_2
+      tags: [lab_2]

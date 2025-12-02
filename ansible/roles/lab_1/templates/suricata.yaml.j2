@@ -1,0 +1,54 @@
+%YAML 1.1
+---
+# Ansible managed - do not edit manually
+
+# Variables (КРИТИЧНО для ваших правил!)
+vars:
+  address-groups:
+    HOME_NET: "[172.18.0.0/24]"
+    EXTERNAL_NET: "any"
+
+# Run mode (без дефиса!)
+runmode: workers
+
+# Threading
+max-pending-packets: 1024
+detect-thread-ratio: 1.0
+
+# Stream (для реассемблирования фрагментов)
+stream:
+  memcap: 64mb
+  reassembly:
+    memcap: 128mb
+    depth: 1mb
+    toserver-chunk-size: 2560
+    toclient-chunk-size: 2560
+
+# NFQUEUE for IPS
+nfqueue:
+  mode: accept
+  repeat-mark: 1
+  repeat-mask: 1
+  bypass-mark: 2
+  bypass-mask: 2
+  queue-balance: 0  # Один поток для простоты
+
+# Rules (файлы, а не сами правила!)
+rule-files:
+  - /etc/suricata/rules/local.rules
+  - /etc/suricata/rules/nmap.rules
+
+# Logging
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: /var/log/suricata/eve.json
+      types:
+        - alert
+        - http
+        - dns
+        - tls
+        - tcp  # Добавьте для отладки сканов
+        - flow # Добавьте для отслеживания потоков
+      community-id: true

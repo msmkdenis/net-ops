@@ -1,5 +1,5 @@
 ---
-# Docker integration  
+# Docker integration
 suricata_ips_docker_network: "172.17.0.0/16"
 
 # Rules

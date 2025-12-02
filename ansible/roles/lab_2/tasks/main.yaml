@@ -1,0 +1,18 @@
+- name: Deploy NMAP detection rules
+  ansible.builtin.template:
+    src: nmap.rules.j2
+    dest: /etc/suricata/rules/nmap.rules
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart suricata
+  tags: [lab_2]
+
+- name: Ensure nmap.rules is included in suricata.yaml
+  ansible.builtin.lineinfile:
+    path: /etc/suricata/suricata.yaml
+    regexp: '^  - /etc/suricata/rules/nmap.rules'
+    line: '  - /etc/suricata/rules/nmap.rules'
+    insertafter: '^rule-files:'
+  notify: Restart suricata
+  tags: [lab_2]

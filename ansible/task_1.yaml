@@ -4,12 +4,9 @@
   roles:
     - docker_install
 
-- name: Deploy Suricata as IPS for Docker environment
+- name: Lab_1
   hosts: net_ops
   become: true
   gather_facts: true
-  serial: 1  # Развертываем по одному серверу
-
   roles:
-    - role: suricata_ips
-      tags: [suricata, ips, docker]
+    - role: lab_1

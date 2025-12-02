@@ -21,6 +21,6 @@
 
 - name: Check Suricata version
   ansible.builtin.command: suricata --build-info
-  register: suricata_ips_version
+  register: lab_1_suricata_ips_version
   changed_when: false
   tags: [installation]
