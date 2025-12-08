@@ -5,11 +5,12 @@ VMS = [
         #public_ip: "192.168.56.10",
         private_ip: "192.168.56.10",
         ssh_port: 2201,
-        memory: 1024,
-        cpus: 1,
+        memory: 4096,
+        cpus: 4,
         forwarded_ports: [
             {guest: 8055, host: 8055},
-            {guest: 22, host: 2201}
+            {guest: 22, host: 2201},
+            {guest: 5636, host: 5636}  # Порт для EveBox
         ]
     },
 ]
