@@ -16,3 +16,18 @@
     insertafter: '^rule-files:'
   notify: Restart suricata
   tags: [lab_2]
+
+- name: Launch EveBox container
+  community.docker.docker_container:
+    name: evebox
+    image: jasonish/evebox:latest
+    state: started
+    recreate: true
+    ports:
+      - "0.0.0.0:5636:5636"
+    volumes:
+      - "/var/log/suricata:/var/log/suricata:ro"
+    # Добавляем --no-auth и --no-tls
+    command: "evebox server --no-auth --no-tls --datastore sqlite --input /var/log/suricata/eve.json --host 0.0.0.0"
+    restart_policy: always
+  tags: [lab_2, evebox]

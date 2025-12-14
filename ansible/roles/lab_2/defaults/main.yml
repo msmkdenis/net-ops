@@ -1,19 +1,41 @@
-# В defaults/main.yml
 lab_2_suricata_ips_nmap_rules:
-  # 1. SYN Scan — блокировка
+  # --- Блокировка (IPS) ---
+  # 1. SYN Scan (nmap -sS) - блокируем, так как это явная атака
   - >-
-    drop tcp $EXTERNAL_NET any -> $HOME_NET any (flags:S,CE; flow:to_server,no_stream;
+    drop tcp $EXTERNAL_NET any -> $HOME_NET any (flags:S; flow:to_server,no_stream;
     msg:"[IPS] NMAP SYN Scan Blocked"; threshold:type both, track by_src, count 10,
     seconds 6; sid:1001001; rev:1;)
 
-  # 2. XMAS Scan — детект
+  # 2. UDP Scan (nmap -sU) - блокируем
+  - >-
+    drop udp $EXTERNAL_NET any -> $HOME_NET any (dsize:0;
+    msg:"[IPS] NMAP UDP Scan Blocked"; threshold:type both, track by_src, count 10,
+    seconds 10; sid:1001003; rev:1;)
+
+  # --- Детектирование (IDS) ---
+  # 3. XMAS Scan (nmap -sX)
   - >-
     alert tcp $EXTERNAL_NET any -> $HOME_NET any (flags:FPU; flow:to_server,no_stream;
     msg:"[IDS] NMAP XMAS Scan Detected"; threshold:type both, track by_src, count 5,
     seconds 6; sid:1001002; rev:1;)
 
-  # 3. UDP Scan — блокировка
+  # 4. OS Fingerprinting (nmap -O) [cite: 56]
   - >-
-    drop udp $EXTERNAL_NET any -> $HOME_NET any (dsize:0;
-    msg:"[IPS] NMAP UDP Scan Blocked"; threshold:type both, track by_src, count 10,
-    seconds 10; sid:1001003; rev:1;)
+    alert ip $EXTERNAL_NET any -> $HOME_NET any (msg:"[IDS] Possible OS Fingerprinting Attempt";
+    ipopts:any; threshold:type both, track by_src, count 5, seconds 20;
+    sid:1001101; rev:1;)
+
+  # 5. ACK Scan (nmap -sA) [cite: 98]
+  - >-
+    alert tcp $EXTERNAL_NET any -> $HOME_NET any (flags:A; msg:"[IDS] NMAP ACK Scan Detected";
+    threshold: type both, track by_src, count 5, seconds 10; sid: 1001004; rev:1;)
+
+  # 6. FIN Scan (nmap -sF) [cite: 100]
+  - >-
+    alert tcp $EXTERNAL_NET any -> $HOME_NET any (flags:F; msg:"[IDS] NMAP FIN Scan Detected";
+    threshold: type both, track by_src, count 3, seconds 10; sid: 1001005; rev:1;)
+
+  # 7. NULL Scan (nmap -sN) [cite: 102]
+  - >-
+    alert tcp $EXTERNAL_NET any -> $HOME_NET any (flags:0; msg:"[IDS] NMAP NULL Scan Detected";
+    threshold: type both, track by_src, count 2, seconds 10; sid: 1001006; rev:1;)

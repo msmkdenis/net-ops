@@ -10,6 +10,9 @@
   community.docker.docker_network:
     name: "{{ lab_1_suricata_ips_docker_network_name }}"
     state: present
+    # 1. ФИКС СЕТИ (чтобы Suricata видела трафик как HOME_NET)
+    ipam_config:
+      - subnet: "172.18.0.0/24"
   tags: [docker_stand]
 
 - name: Ensure html folder exists for nginx
@@ -79,6 +82,10 @@
       - name: "{{ lab_1_suricata_ips_docker_network_name }}"
     tty: true
     detach: true
+    # 2. ФИКС ПРАВ (чтобы Nmap не падал с ошибкой)
+    capabilities:
+      - NET_ADMIN
+      - NET_RAW
   tags: [docker_stand]
 
 - name: Display instructions for testing
