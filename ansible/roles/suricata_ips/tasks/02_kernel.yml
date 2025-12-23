@@ -1,0 +1,33 @@
+---
+- name: Load br_netfilter module
+  community.general.modprobe:
+    name: br_netfilter
+    state: present
+
+- name: Persist br_netfilter module load
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/br_netfilter.conf
+    content: "br_netfilter\n"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Write bridge netfilter sysctls
+  ansible.builtin.template:
+    src: 99-bridge-nf.conf.j2
+    dest: "{{ suricata_ips_sysctl_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Apply sysctl bridge nf  # CHANGED: sysctl -p вызываем через handler (исправляет no-handler)
+
+- name: Ensure sysctls present (persist + runtime)
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_file: "{{ suricata_ips_sysctl_file }}"
+    reload: true
+  loop:
+    - { name: "net.bridge.bridge-nf-call-iptables", value: "1" }
+    - { name: "net.bridge.bridge-nf-call-ip6tables", value: "1" }

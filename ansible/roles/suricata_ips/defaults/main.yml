@@ -1,0 +1,15 @@
+---
+suricata_ips_ppa: "ppa:oisf/suricata-stable"
+
+suricata_ips_nfqueue_num: 1
+suricata_ips_nfqueue_workers: "0-3"
+
+suricata_ips_bin: /usr/bin/suricata
+suricata_ips_yaml: /etc/suricata/suricata.yaml
+
+suricata_ips_rules_dir: /etc/suricata/rules
+suricata_ips_local_rules: /etc/suricata/rules/local.rules
+
+suricata_ips_apply_docker_nfqueue: true
+
+suricata_ips_sysctl_file: /etc/sysctl.d/99-bridge-nf.conf

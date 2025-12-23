@@ -1,0 +1,27 @@
+---
+- name: Ensure rules dir exists
+  ansible.builtin.file:
+    path: "{{ suricata_ips_rules_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install local.rules
+  ansible.builtin.copy:
+    src: local.rules
+    dest: "{{ suricata_ips_local_rules }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Suricata
+
+- name: Configure suricata.yaml
+  ansible.builtin.template:
+    src: suricata.yaml.j2
+    dest: "{{ suricata_ips_yaml }}"
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+  notify: Restart Suricata

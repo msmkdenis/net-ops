@@ -3,10 +3,3 @@
   become: true
   roles:
     - docker_install
-
-- name: Lab_1
-  hosts: net_ops
-  become: true
-  gather_facts: true
-  roles:
-    - role: lab_1

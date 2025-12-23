@@ -1,0 +1,4 @@
+[Service]
+ExecStart=
+ExecStart={{ suricata_ips_bin }} -c {{ suricata_ips_yaml }} -q {{ suricata_ips_nfqueue_num }} --pidfile /run/suricata.pid
+

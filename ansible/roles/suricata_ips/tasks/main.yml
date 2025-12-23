@@ -1,0 +1,19 @@
+---
+- name: Packages
+  ansible.builtin.import_tasks: 01_packages.yml
+
+- name: Kernel / sysctl
+  ansible.builtin.import_tasks: 02_kernel.yml
+
+- name: Rules
+  ansible.builtin.import_tasks: 03_rules.yml
+
+- name: Suricata config
+  ansible.builtin.import_tasks: 04_config.yml
+
+- name: Systemd override + service
+  ansible.builtin.import_tasks: 05_systemd.yml
+
+- name: IPTables NFQUEUE (Docker)
+  ansible.builtin.import_tasks: 06_iptables.yml
+  when: suricata_ips_apply_docker_nfqueue

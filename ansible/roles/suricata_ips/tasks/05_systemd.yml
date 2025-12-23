@@ -1,0 +1,38 @@
+---
+- name: Ensure systemd override dir exists
+  ansible.builtin.file:
+    path: /etc/systemd/system/suricata.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install suricata systemd override
+  ansible.builtin.template:
+    src: suricata.override.conf.j2
+    dest: /etc/systemd/system/suricata.service.d/override.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Reload systemd units (daemon-reload)
+  ansible.builtin.systemd:
+    daemon_reload: true
+  changed_when: false  # CHANGED: убрали условность/handler-поведение, линтер больше не ругается no-handler
+
+- name: Check current capabilities
+  ansible.builtin.command: "getcap {{ suricata_ips_bin }}"
+  register: suricata_ips_suricata_caps
+  changed_when: false
+  failed_when: false
+
+- name: Set capabilities for suricata binary
+  ansible.builtin.command: "setcap cap_net_admin,cap_net_raw+ep {{ suricata_ips_bin }}"
+  when: suricata_ips_suricata_caps.stdout is not search("cap_net_admin,cap_net_raw\\+ep")
+  changed_when: true  # CHANGED: явное changed_when для no-changed-when
+
+- name: Enable and restart Suricata (like in script)
+  ansible.builtin.systemd:
+    name: suricata
+    enabled: true
+    state: restarted

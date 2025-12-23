@@ -1,0 +1,14 @@
+---
+- name: Docker compose up (build + recreate like in roles)
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker_compose_lab_dest_dir }}"
+    project_name: "{{ docker_compose_lab_project_name }}"
+    files:
+      - "{{ docker_compose_lab_compose_file }}"
+    env_files:
+      - "{{ docker_compose_lab_env_file }}"
+    state: present
+    pull: "{{ docker_compose_lab_pull_policy }}"
+    build: "{{ docker_compose_lab_build_policy }}"
+    recreate: "{{ docker_compose_lab_recreate_policy }}"
+    remove_orphans: true

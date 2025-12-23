@@ -1,0 +1,9 @@
+---
+- name: Prerequisites
+  ansible.builtin.import_tasks: 01_prereqs.yml
+
+- name: Deploy project files
+  ansible.builtin.import_tasks: 02_deploy.yml
+
+- name: Run docker compose project
+  ansible.builtin.import_tasks: 03_compose.yml

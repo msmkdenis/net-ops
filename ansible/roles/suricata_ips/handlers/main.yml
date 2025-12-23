@@ -1,0 +1,13 @@
+---
+- name: Restart Suricata
+  ansible.builtin.service:
+    name: suricata
+    state: restarted
+
+- name: Save IPTables
+  ansible.builtin.command: netfilter-persistent save
+  changed_when: false
+
+- name: Apply sysctl bridge nf
+  ansible.builtin.command: "sysctl -p {{ suricata_ips_sysctl_file }}"  # CHANGED: handler вместо task
+  changed_when: false

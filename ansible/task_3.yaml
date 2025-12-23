@@ -1,0 +1,5 @@
+- name: Run docker compose lab
+  hosts: all
+  become: true
+  roles:
+    - docker_compose_lab

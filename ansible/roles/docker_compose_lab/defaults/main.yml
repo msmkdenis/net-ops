@@ -1,0 +1,29 @@
+---
+docker_compose_lab_project_name: suricata-lab
+docker_compose_lab_dest_dir: /opt/suricata-lab
+
+docker_compose_lab_compose_file: docker-compose.yml
+docker_compose_lab_env_file: .env
+
+docker_compose_lab_attacker_name: attacker
+docker_compose_lab_attacker_image: attacker-kali:latest
+docker_compose_lab_attacker_ip: 172.16.90.20
+
+docker_compose_lab_victim_name: victim
+docker_compose_lab_victim_image: nginx:alpine
+docker_compose_lab_victim_ip: 172.16.90.10
+docker_compose_lab_victim_port: 8000
+
+# CHANGED: EveBox variables
+docker_compose_lab_evebox_name: evebox
+docker_compose_lab_evebox_image: jasonish/evebox:latest
+docker_compose_lab_evebox_ip: 172.16.90.30
+docker_compose_lab_evebox_port: 5636
+docker_compose_lab_evebox_evejson_host_path: /var/log/suricata/eve.json
+
+docker_compose_lab_network_name: labnet
+docker_compose_lab_network_subnet: 172.16.90.0/24
+
+docker_compose_lab_build_policy: always
+docker_compose_lab_pull_policy: policy
+docker_compose_lab_recreate_policy: always

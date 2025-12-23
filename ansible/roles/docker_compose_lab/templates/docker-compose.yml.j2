@@ -1,0 +1,49 @@
+services:
+  attacker:
+    image: {{ docker_compose_lab_attacker_image }}
+    container_name: {{ docker_compose_lab_attacker_name }}
+    build:
+      context: .
+      dockerfile: Dockerfile.attacker
+    command: ["sleep", "infinity"]
+    tty: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    networks:
+      labnet:
+        ipv4_address: {{ docker_compose_lab_attacker_ip }}
+
+  victim:
+    image: {{ docker_compose_lab_victim_image }}
+    container_name: {{ docker_compose_lab_victim_name }}
+    ports:
+      - "{{ docker_compose_lab_victim_port }}:80"
+    volumes:
+      - "./victim_html:/usr/share/nginx/html:ro"
+    networks:
+      labnet:
+        ipv4_address: {{ docker_compose_lab_victim_ip }}
+
+  # CHANGED: EveBox service
+  evebox:
+    image: {{ docker_compose_lab_evebox_image }}
+    container_name: {{ docker_compose_lab_evebox_name }}
+    ports:
+      - "{{ docker_compose_lab_evebox_port }}:5636"
+    volumes:
+      - "/var/log/suricata:/var/log/suricata:ro"
+      - "./evebox_data:/data"
+    # CHANGED: важно, чтобы команда начиналась с "evebox"
+    command: ["evebox", "server", "-D", "/data", "--datastore", "sqlite", "--input", "/var/log/suricata/eve.json", "--host", "0.0.0.0", "--no-auth", "--no-tls"]
+    networks:
+      labnet:
+        ipv4_address: {{ docker_compose_lab_evebox_ip }}
+
+networks:
+  labnet:
+    name: {{ docker_compose_lab_network_name }}
+    driver: bridge
+    ipam:
+      config:
+        - subnet: {{ docker_compose_lab_network_subnet }}

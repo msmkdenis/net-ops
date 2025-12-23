@@ -1,0 +1,56 @@
+---
+- name: Ensure project directory exists
+  ansible.builtin.file:
+    path: "{{ docker_compose_lab_dest_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Ensure victim html directory exists
+  ansible.builtin.file:
+    path: "{{ docker_compose_lab_dest_dir }}/victim_html"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy attacker Dockerfile
+  ansible.builtin.copy:
+    src: Dockerfile.attacker
+    dest: "{{ docker_compose_lab_dest_dir }}/Dockerfile.attacker"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy victim index.html
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: "{{ docker_compose_lab_dest_dir }}/victim_html/index.html"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ docker_compose_lab_dest_dir }}/{{ docker_compose_lab_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy .env
+  ansible.builtin.template:
+    src: .env.j2
+    dest: "{{ docker_compose_lab_dest_dir }}/{{ docker_compose_lab_env_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure EveBox data directory exists
+  ansible.builtin.file:
+    path: "{{ docker_compose_lab_dest_dir }}/evebox_data"
+    state: directory
+    owner: root
+    group: root
+    mode: "0777"  # чтобы EveBox точно мог писать sqlite/config (лабораторный вариант)

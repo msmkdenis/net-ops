@@ -1,7 +1,5 @@
-- name: Lab_2
-  hosts: net_ops
+- name: Suricata IPS lab setup
+  hosts: all
   become: true
-  gather_facts: true
   roles:
-    - role: lab_2
-      tags: [lab_2]
+    - suricata_ips

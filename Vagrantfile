@@ -2,15 +2,20 @@ VMS = [
     {
         name: "net_ops",
         box: "ubuntu/jammy64",
-        #public_ip: "192.168.56.10",
         private_ip: "192.168.56.10",
         ssh_port: 2201,
-        memory: 4096,
+        memory: 6144,
         cpus: 4,
         forwarded_ports: [
             {guest: 8055, host: 8055},
             {guest: 22, host: 2201},
-            {guest: 5636, host: 5636}  # Порт для EveBox
+            {guest: 5636, host: 5636},  # EveBox
+            # --- Lab 3 ---
+            {guest: 8161, host: 8161},  # ActiveMQ Web Console
+            {guest: 8080, host: 8080},  # Jenkins
+            {guest: 9001, host: 9001},  # MinIO Console
+            # --- Lab 4 ---
+            {guest: 3000, host: 3000}   # OWASP Juice Shop
         ]
     },
 ]

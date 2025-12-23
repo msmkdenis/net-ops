@@ -1,0 +1,27 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install base deps (incl. add-apt-repository)
+  ansible.builtin.apt:
+    name:
+      - software-properties-common
+      - curl
+      - jq
+      - iptables-persistent
+      - libnetfilter-queue1
+      - libnfnetlink0
+    state: present
+
+- name: Add Suricata PPA
+  ansible.builtin.apt_repository:
+    repo: "{{ suricata_ips_ppa }}"
+    state: present
+    update_cache: true
+
+- name: Install Suricata
+  ansible.builtin.apt:
+    name: suricata
+    state: present

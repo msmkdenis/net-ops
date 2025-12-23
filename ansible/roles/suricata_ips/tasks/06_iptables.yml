@@ -1,0 +1,28 @@
+---
+- name: Check DOCKER-USER chain exists
+  ansible.builtin.command: "iptables -t filter -S DOCKER-USER"
+  register: suricata_ips_docker_user_chain
+  changed_when: false
+  failed_when: false
+
+- name: Skip NFQUEUE setup if DOCKER-USER chain is missing
+  ansible.builtin.debug:
+    msg: "DOCKER-USER chain not found (Docker not installed yet?) — skipping NFQUEUE iptables rule."
+  when: suricata_ips_docker_user_chain.rc != 0
+
+- name: Check NFQUEUE rule exists
+  ansible.builtin.command: >
+    iptables -t filter -C DOCKER-USER -j NFQUEUE --queue-num {{ suricata_ips_nfqueue_num }} --queue-bypass
+  register: suricata_ips_nfqueue_rule_check
+  changed_when: false
+  failed_when: false
+  when: suricata_ips_docker_user_chain.rc == 0
+
+- name: Insert NFQUEUE rule at position 1
+  ansible.builtin.command: >
+    iptables -t filter -I DOCKER-USER 1 -j NFQUEUE --queue-num {{ suricata_ips_nfqueue_num }} --queue-bypass
+  when:
+    - suricata_ips_docker_user_chain.rc == 0
+    - suricata_ips_nfqueue_rule_check.rc != 0
+  changed_when: true  # CHANGED: явное changed_when для no-changed-when
+  notify: Save IPTables
