@@ -52,3 +52,17 @@ logging:
         level: info
         filename: suricata.log
 
+stream:
+  memcap: 64mb
+  checksum-validation: no      # <--- ВАЖНО: Отключаем проверку чексуммы
+  inline: no                   # <--- ВАЖНО: Отключаем строгий IPS
+  drop-invalid: no             # <--- ВАЖНО: Разрешаем битые пакеты
+  midstream: true              # <--- ВАЖНО: Разрешаем подхват сессии с середины
+  reassembly:
+    memcap: 256mb
+    depth: 1mb
+    toserver-chunk-size: 2560
+    toclient-chunk-size: 2560
+    randomize-chunk-size: yes
+
+
