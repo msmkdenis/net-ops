@@ -1,24 +1,114 @@
 drop icmp any any -> any any (msg:"[IPS] BLOCK ICMP"; sid:100007; rev:1;)
 
-alert http any any -> any any (msg:"[IDS] HTTP Request Detected"; sid:100002; rev:1; flow:to_server; classtype:policy-violation;)
+#alert http any any -> any any (msg:"[IDS] HTTP Request Detected"; sid:100002; rev:1; flow:to_server; classtype:policy-violation;)
 
 # Блокировка SYN scan (nmap -sS)
-drop tcp any any -> any any (flags:S; msg:"[IPS] NMAP SYN Scan Blocked"; threshold: type both, track by_src, count 10, seconds 6; sid:1001001; rev:1;)
+#drop tcp any any -> any any (flags:S; msg:"[IPS] NMAP SYN Scan Blocked"; threshold: type both, track by_src, count 10, seconds 6; sid:1001001; rev:1;)
 
 # Детектирование XMAS scan (nmap -sX)
-alert tcp any any -> any any (flags:FPU; msg:"[IDS] NMAP XMAS Scan Detected"; threshold: type both, track by_src, count 5, seconds 6; sid:1001002; rev:1;)
+#alert tcp any any -> any any (flags:FPU; msg:"[IDS] NMAP XMAS Scan Detected"; threshold: type both, track by_src, count 5, seconds 6; sid:1001002; rev:1;)
 
 # Блокировка UDP scan (nmap -sU)
-drop udp any any -> any any (msg:"[IPS] NMAP UDP Scan Blocked"; threshold: type both, track by_src, count 10, seconds 10; sid:1001003; rev:1;)
+#drop udp any any -> any any (msg:"[IPS] NMAP UDP Scan Blocked"; threshold: type both, track by_src, count 10, seconds 10; sid:1001003; rev:1;)
 
 # Детектирование OS fingerprinting (nmap -O)
-alert ip any any -> any any (msg:"[IDS] Possible OS Fingerprinting Attempt"; ipopts: any; threshold: type both, track by_src, count 5, seconds 20; sid:1001101; rev:1;)
+#alert ip any any -> any any (msg:"[IDS] Possible OS Fingerprinting Attempt"; ipopts: any; threshold: type both, track by_src, count 5, seconds 20; sid:1001101; rev:1;)
 
 # ACK scan (nmap -sA)
-alert tcp any any -> any any (flags:A; msg:"[IDS] NMAP ACK Scan Detected"; threshold: type both, track by_src, count 5, seconds 10; sid:1001004; rev:1;)
+#alert tcp any any -> any any (flags:A; msg:"[IDS] NMAP ACK Scan Detected"; threshold: type both, track by_src, count 5, seconds 10; sid:1001004; rev:1;)
 
 # FIN scan (nmap -sF)
-alert tcp any any -> any any (flags:F; msg:"[IDS] NMAP FIN Scan Detected"; threshold: type both, track by_src, count 3, seconds 10; sid:1001005; rev:1;)
+#alert tcp any any -> any any (flags:F; msg:"[IDS] NMAP FIN Scan Detected"; threshold: type both, track by_src, count 3, seconds 10; sid:1001005; rev:1;)
 
 # NULL scan (nmap -sN)
-alert tcp any any -> any any (flags:0; msg:"[IDS] NMAP NULL Scan Detected"; threshold: type both, track by_src, count 2, seconds 10; sid:1001006; rev:1;)
+#alert tcp any any -> any any (flags:0; msg:"[IDS] NMAP NULL Scan Detected"; threshold: type both, track by_src, count 2, seconds 10; sid:1001006; rev:1;)
+
+#alert http any any -> any any (msg:"LAB: Shellshock pattern in User-Agent"; flow:to_server; http.user_agent; content:"() { :;};"; nocase; classtype:web-application-attack; sid:1000051; rev:3;)
+# IDS (Alert) - Детектирование попытки активации
+#alert tcp any any -> any 21 (msg:"EXPLOIT: vsftpd 2.3.4 Backdoor Triggered :)"; flow:to_server,established; content:"USER"; nocase; content:":)"; distance:0; within:50; classtype:attempted-admin; sid:1000020; rev:1;)
+# IPS (Drop) - Блокировка пакета с командой (соединение разорвется)
+#drop tcp any any -> any 21 (msg:"BLOCKED: vsftpd Backdoor Attempt"; flow:to_server,established; content:"USER"; nocase; content:":)"; distance:0; within:50; classtype:attempted-admin; sid:1000021; rev:1;)
+
+# ==========================
+# Lab 4: OWASP Top 10 — Juice Shop (HTTP)  [v2]
+# Корректные буферы: http.uri / http.method / http.request_body
+# ==========================
+
+# --- A01: Broken Access Control (IDOR: /rest/basket/<id>) ---
+#alert http any any -> any 3000 (msg:"LAB ALERT: IDOR Basket Access Detected"; flow:to_server,established; http.uri; content:"/rest/basket/"; pcre:"/\/rest\/basket\/[0-9]+/"; classtype:web-application-attack; sid:4601001; rev:2;)
+#drop http any any -> any 3000 (msg:"LAB ALERT: IDOR Enumeration (Brute Force)"; flow:to_server,established; http.uri; content:"/rest/basket/"; pcre:"/\/rest\/basket\/[0-9]+/"; threshold:type both, track by_src, count 5, seconds 20; classtype:web-application-attack; sid:4601002; rev:2;)
+
+# --- A01: Broken Access Control (IDOR: /rest/basket/<id>) ---
+#alert http any any -> any 3000 (msg:"[IDS] IDOR basket access attempt"; flow:to_server,established; http.uri; pcre:"/\\/rest\\/basket\\/\\d+(\\/)?$/"; classtype:web-application-attack; sid:4601001; rev:1;)
+#alert http any any -> any 3000 (msg:"[IDS] IDOR basket enumeration detected"; flow:to_server,established; http.uri; pcre:"/\\/rest\\/basket\\/\\d+(\\/)?$/"; threshold:type both, track by_src, count 3, seconds 10; classtype:web-application-attack; sid:4601002; rev:1;)
+#drop  http any any -> any 3000 (msg:"[IPS] IDOR basket enumeration blocked"; flow:to_server,established; http.uri; pcre:"/\\/rest\\/basket\\/\\d+(\\/)?$/"; threshold:type both, track by_src, count 5, seconds 10; sid:4601101; rev:1;)
+
+# --- A02: Cryptographic Failures ---
+#alert http any any -> any 3000 (msg:"[IDS] Poison Null Byte detected"; flow:to_server,established; http_uri; pcre:"/%00|%2500/i"; classtype:web-application-attack; sid:4502003; rev:1;)
+#alert http any any -> any 3000 (msg:"[IDS] Backup file access attempt"; flow:to_server,established; http_uri; pcre:"/\.bak/i"; classtype:policy-violation; sid:4502002; rev:1;)
+#alert http any any -> any 3000 (msg:"[IDS] FTP directory access"; flow:to_server,established; http_uri; content:"/ftp/"; classtype:policy-violation; sid:4502001; rev:1;)
+#drop http any any -> any 3000 (msg:"[IPS] Poison Null Byte blocked"; flow:to_server,established; http_uri; pcre:"/%00|%2500/i"; sid:4502101; rev:1;)
+
+# --- A02: Cryptographic Failures (backup, Poison Null Byte, coupons) ---
+#alert http any any -> any 3000 (msg:"[IDS] FTP directory access"; flow:to_server,established; http.uri; content:"/ftp/"; classtype:policy-violation; sid:4602001; rev:1;)
+#alert http any any -> any 3000 (msg:"[IDS] Backup file access attempt"; flow:to_server,established; http.uri; pcre:"/\.bak/i"; classtype:policy-violation; sid:4602002; rev:1;)
+#alert http any any -> any 3000 (msg:"[IDS] Poison Null Byte detected"; flow:to_server,established; http.uri; pcre:"/%00|%2500/i"; classtype:web-application-attack; sid:4602003; rev:1;)
+#alert http any any -> any 3000 (msg:"[IDS] Sensitive file access (coupons)"; flow:to_server,established; http.uri; content:"coupons"; nocase; classtype:policy-violation; sid:4602004; rev:1;)
+#drop  http any any -> any 3000 (msg:"[IPS] Poison Null Byte blocked"; flow:to_server,established; http.uri; pcre:"/%00|%2500/i"; sid:4602101; rev:1;)
+#drop  http any any -> any 3000 (msg:"[IPS] Backup file access blocked"; flow:to_server,established; http.uri; pcre:"/\.bak/i"; sid:4602102; rev:1;)
+
+# --- A03: SQL Injection  ---
+#alert http any any -> any 3000 (msg:"[IDS] SQLi OR 1=1 detected"; flow:to_server,established; http.request_body; pcre:"/or\s+\d+\s*=\s*\d+/i"; classtype:web-application-attack; sid:4603001; rev:2;)
+#alert http any any -> any 3000 (msg:"[IDS] SQLi UNION SELECT detected"; flow:to_server,established; http.uri; content:"union"; nocase; pcre:"/union\s+select/i"; classtype:web-application-attack; sid:4603002; rev:2;)
+#alert http any any -> any 3000 (msg:"[IDS] SQLi comment found"; flow:to_server,established; http.request_body; content:"--"; classtype:web-application-attack; sid:4603003; rev:1;)
+#drop http any any -> any 3000 (msg:"[IPS] SQLi blocked on login"; flow:to_server,established; http.method; content:"POST"; http.uri; content:"/rest/user/login"; http.request_body; pcre:"/or\\s+1=1|union\\s+select/i"; sid:4603101; rev:2;)
+
+# --- A04: Insecure Design (no rate limiting on login) ---
+#alert http any any -> any 3000 (msg:"[IDS] Login brute-force detected"; flow:to_server,established; content:"/rest/user/login"; http_uri; content:"POST"; http_method; threshold:type both, track by_src, count 5, seconds 10; classtype:attempted-recon; sid:4504001; rev:2;)
+#alert http any any -> any 3000 (msg:"[IDS] Aggressive login brute-force"; flow:to_server,established; content:"/rest/user/login"; http_uri; threshold:type both, track by_src, count 10, seconds 30; classtype:attempted-recon; sid:4504002; rev:2;)
+#drop http any any -> any 3000 (msg:"[IPS] Login brute-force blocked"; flow:to_server,established; content:"/rest/user/login"; http_uri; content:"POST"; http_method; threshold:type both, track by_src, count 5, seconds 10; sid:4504101; rev:2;)
+
+# --- A05: Security Misconfiguration (FIXED: any dest + syntax) ---
+#alert http any any -> any 3000 (msg:"[IDS] Poison Null Byte detected"; flow:to_server,established; content:"%2500"; http_uri; classtype:web-application-attack; sid:4505001; rev:3;)
+#alert http any any -> any 3000 (msg:"[IDS] FTP directory access"; flow:to_server,established; content:"/ftp/"; http_uri; classtype:policy-violation; sid:4505002; rev:3;)
+#alert http any any -> any 3000 (msg:"[IDS] Backup file access"; flow:to_server,established; content:".bak"; http_uri; classtype:policy-violation; sid:4505003; rev:3;)
+#alert http any any -> any 3000 (msg:"[IDS] Metrics endpoint access"; flow:to_server,established; content:"/metrics"; http_uri; classtype:policy-violation; sid:4505004; rev:3;)
+#alert http any any -> any 3000 (msg:"[IDS] Security Questions API access"; flow:to_server,established; content:"/api/SecurityQuestions"; http_uri; classtype:policy-violation; sid:4505005; rev:3;)
+#drop http any any -> any 3000 (msg:"[IPS] Poison Null Byte blocked"; flow:to_server,established; content:"%2500"; http_uri; sid:4505101; rev:3;)
+#drop http any any -> any 3000 (msg:"[IPS] Backup file access blocked"; flow:to_server,established; content:".bak"; http_uri; sid:4505102; rev:3;)
+#drop http any any -> any 3000 (msg:"[IPS] Metrics access blocked"; flow:to_server,established; content:"/metrics"; http_uri; sid:4505103; rev:3;)
+
+# --- A06: Vulnerable Components (IDS) ---
+#alert http any any -> any 3000 (msg:"[IDS] Error page fingerprinting attempt"; flow:to_server,established; content:".txt"; http_uri; classtype:attempted-recon; sid:4506001; rev:2;)
+#alert http any any -> any 3000 (msg:"[IDS] Dependency config access"; flow:to_server,established; content:"package.json"; http_uri; classtype:attempted-recon; sid:4506003; rev:2;)
+
+# --- A07: Identification & Authentication Failures ---
+#alert http any any -> any 3000 (msg:"[IDS] SQLi authentication bypass"; flow:to_server,established; content:"/rest/user/login"; http_uri; content:"or"; http_client_body; nocase; pcre:"/or\s+1=1/i"; classtype:web-application-attack; sid:4507001; rev:2;)
+#alert http any any -> any 3000 (msg:"[IDS] Multiple failed login attempts"; flow:to_server,established; content:"/rest/user/login"; http_uri; content:"POST"; http_method; threshold:type both, track by_src, count 5, seconds 30; classtype:attempted-recon; sid:4507002; rev:2;)
+#drop http any any -> any 3000 (msg:"[IPS] Failed login threshold exceeded"; flow:to_server,established; content:"/rest/user/login"; http_uri; threshold:type both, track by_src, count 10, seconds 30; sid:4507102; rev:2;)
+
+# --- A08: XSS ---
+#alert http any any -> any 3000 (msg:"[IDS] XSS script tag detected"; flow:to_server,established; content:"<script"; http_uri; nocase; classtype:web-application-attack; sid:4508001; rev:2;)
+#drop http any any -> any 3000 (msg:"[IPS] XSS script blocked"; flow:to_server,established; content:"<script"; http_uri; nocase; sid:4508101; rev:2;)
+#alert http any any -> any 3000 (msg:"[IDS] XSS javascript URI detected"; flow:to_server,established; content:"javascript:"; http_uri; nocase; classtype:web-application-attack; sid:4508003; rev:2;)
+#drop http any any -> any 3000 (msg:"[IPS] XSS javascript URI blocked"; flow:to_server,established; content:"javascript:"; http_uri; nocase; sid:4508102; rev:2;)
+#alert http any any -> any 3000 (msg:"[IDS] XSS iframe injection detected"; flow:to_server,established; content:"<iframe"; http_uri; nocase; classtype:web-application-attack; sid:4508004; rev:2;)
+#drop http any any -> any 3000 (msg:"[IPS] XSS iframe blocked"; flow:to_server,established; content:"<iframe"; http_uri; nocase; sid:4508103; rev:2;)
+#alert http any any -> any 3000 (msg:"[IDS] XSS event handler detected"; flow:to_server,established; content:"="; http_uri; pcre:"/on(load|error|click)\s*=/i"; classtype:web-application-attack; sid:4508002; rev:2;)
+#drop http any any -> any 3000 (msg:"[IPS] XSS event handler blocked"; flow:to_server,established; content:"="; http_uri; pcre:"/on(load|error|click)\s*=/i"; sid:4508104; rev:2;)
+
+# --- A09: Logging & Monitoring Failures ---
+#alert http any any -> any 3000 (msg:"[IDS] Log directory access"; flow:to_server,established; content:"/support/logs"; http_uri; classtype:policy-violation; sid:4509001; rev:2;)
+#alert http any any -> any 3000 (msg:"[IDS] Log file download"; flow:to_server,established; content:"/support/logs/"; http_uri; pcre:"/\/support\/logs\/.*(access\.log|audit\.json)/"; classtype:policy-violation; sid:4509002; rev:2;)
+#drop http any any -> any 3000 (msg:"[IPS] Log access blocked"; flow:to_server,established; content:"/support/logs"; http_uri; sid:4509101; rev:2;)
+
+# --- A10: SSRF (Server-Side Request Forgery) ---
+#alert http any any -> any 3000 (msg:"[IDS] SSRF AWS metadata attempt"; flow:to_server,established; content:"169.254.169.254"; http_client_body; classtype:web-application-attack; sid:4510001; rev:2;)
+#alert http any any -> any 3000 (msg:"[IDS] SSRF localhost targeting"; flow:to_server,established; content:"imageUrl"; http_client_body; pcre:"/(localhost|127\.0\.0\.1)/P"; classtype:web-application-attack; sid:4510002; rev:2;)
+#alert http any any -> any 3000 (msg:"[IDS] SSRF file protocol attempt"; flow:to_server,established; content:"file://"; http_client_body; nocase; classtype:web-application-attack; sid:4510005; rev:2;)
+#drop http any any -> any 3000 (msg:"[IPS] SSRF AWS metadata blocked"; flow:to_server,established; content:"169.254.169.254"; http_client_body; sid:4510101; rev:2;)
+#drop http any any -> any 3000 (msg:"[IPS] SSRF localhost blocked"; flow:to_server,established; content:"imageUrl"; http_client_body; pcre:"/(localhost|127\.0\.0\.1)/P"; sid:4510102; rev:2;)
+#drop http any any -> any 3000 (msg:"[IPS] SSRF file protocol blocked"; flow:to_server,established; content:"file://"; http_client_body; nocase; sid:4510104; rev:2;)
+
+# ==========================
+# END Lab 4 v2

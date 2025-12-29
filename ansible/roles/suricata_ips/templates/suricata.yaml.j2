@@ -21,7 +21,9 @@ nfqueue:
     - {{ suricata_ips_nfqueue_workers }}
 
 rule-files:
-  - {{ suricata_ips_local_rules }}
+  - /var/lib/suricata/rules/suricata.rules   # <--- Исправленный полный путь
+  - /etc/suricata/rules/local.rules
+  - /etc/suricata/rules/custom_ioc.rules
 
 outputs:
   - eve-log:
@@ -55,7 +57,6 @@ logging:
 stream:
   memcap: 64mb
   checksum-validation: no      # <--- ВАЖНО: Отключаем проверку чексуммы
-  inline: no                   # <--- ВАЖНО: Отключаем строгий IPS
   drop-invalid: no             # <--- ВАЖНО: Разрешаем битые пакеты
   midstream: true              # <--- ВАЖНО: Разрешаем подхват сессии с середины
   reassembly:
